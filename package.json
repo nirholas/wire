@@ -1,0 +1,28 @@
+{
+  "name": "wire",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Resolve a news link to the trade, fast. Races free resolvers under a latency budget and streams a progressively sharper answer.",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "bin": {
+    "wire": "./bin/wire.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "bot": "node telegram/bot.js",
+    "wire": "node bin/wire.js",
+    "test": "node --test --test-concurrency=4 \"test/**/*.test.js\"",
+    "doctor": "node bin/wire.js --doctor"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.10.1",
+    "node-html-parser": "^7.1.0"
+  }
+}

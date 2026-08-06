@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>wire</title>
+    <meta name="description" content="Resolve a news link to the trade, fast." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚡</text></svg>" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <h1>wire</h1>
+      </div>
+      <a class="status" href="/healthz" target="_blank" rel="noopener" id="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span><span id="status-text">checking</span>
+      </a>
+    </header>
+
+    <main>
+      <form id="form" autocomplete="off">
+        <label class="sr-only" for="url">Link to resolve</label>
+        <input
+          id="url"
+          name="url"
+          type="text"
+          inputmode="url"
+          placeholder="Paste a link. X posts, articles, anything."
+          spellcheck="false"
+          required
+        />
+        <button type="submit" id="go">
+          <span class="go-label">Resolve</span>
+          <kbd>↵</kbd>
+        </button>
+      </form>
+
+      <ol class="lanes" id="lanes" aria-label="Resolver progress"></ol>
+
+      <section id="result" class="result" hidden aria-live="polite"></section>
+
+      <section id="empty" class="empty">
+        <p>Paste a link and every route runs at once.</p>
+        <ul>
+          <li><b>The post</b> if it is an X link, in about 250ms</li>
+          <li><b>The article</b> when the outlet serves it</li>
+          <li><b>Your subscription</b> when you have loaded cookies for that outlet</li>
+          <li><b>Independent coverage</b> when the original is gated</li>
+          <li><b>The primary source</b>: the filing, the announcement, the release</li>
+          <li><b>An archived snapshot</b> when one already exists</li>
+        </ul>
+        <p class="muted">
+          The first useful answer shows immediately and sharpens in place. Nothing here waits for
+          the slowest lane.
+        </p>
+      </section>
+
+      <section class="recent" id="recent" hidden>
+        <h2>Recent</h2>
+        <ul id="recent-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
