@@ -116,11 +116,15 @@ That is the whole setup. It uses long polling by default, so there is **no domai
 TLS certificate, and no public URL required**. Send the bot a link, or add it to a group
 and paste links there.
 
-Restrict it to you and your friends by listing numeric user ids:
+**Lock it down before you share the username.** The bot defaults to open access,
+and anyone who finds it will spend your model quota. Send it `/whoami`, then:
 
 ```bash
 TELEGRAM_ALLOWED_USERS=11111111,22222222
 ```
+
+Restart, and everyone else gets refused. Your friends each send `/whoami` to get
+their own id. `/health` warns in bold whenever access is still open.
 
 The bot posts a message immediately and edits it in place three or four times as the
 answer sharpens. Edits are paced to stay inside Telegram's rate limits.
