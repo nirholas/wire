@@ -4,7 +4,7 @@ import { extractFromHtml } from '../extract.js';
 import { classifyAccess, outletFor } from '../paywall.js';
 import { feedsFor } from '../feeds.js';
 import { cached } from '../cache.js';
-import { searchQuery, storyMatchScore, normalizeTitle, titleFromUrl } from '../text.js';
+import { searchQuery, storyMatchScore, normalizeTitle, titleFromUrl, salientTerms } from '../text.js';
 
 /**
  * The lane that makes the rest of the design work.
@@ -124,9 +124,39 @@ async function openFeeds({ signal, timeoutMs }) {
   return results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
 }
 
+/**
+ * Roundups and digests mention the story without being about it. Their body is
+ * ten unrelated items, so summarizing one attributes figures from a different
+ * story to this one. They are the single worst thing the sibling lane can pick.
+ */
+const DIGEST_TITLE =
+  /(what happened in crypto|crypto today|daily (roundup|digest|briefing|recap)|morning (briefing|brief)|week in review|weekly recap|top stories|news roundup|market wrap|\bliveblog\b|live updates|^\d+ things)/i;
+
+export function isDigest(title) {
+  return DIGEST_TITLE.test(String(title || ''));
+}
+
+/**
+ * Does this body actually cover the story the headline describes?
+ *
+ * Checks that the headline's most distinctive terms (proper nouns, acronyms,
+ * tickers, numbers) survive into the text. Requires most of them, not all: a
+ * different outlet will phrase things differently, but it cannot write about
+ * Wintermute registering with the SEC without naming Wintermute.
+ */
+export function coversStory(title, text) {
+  const terms = salientTerms(title, 6).filter((term) => term.length > 3);
+  if (terms.length < 2) return true; // too little to verify against; do not reject
+
+  const haystack = String(text || '').toLowerCase();
+  const present = terms.filter((term) => haystack.includes(term.toLowerCase().replace(/^\$/, '')));
+  return present.length / terms.length >= 0.5;
+}
+
 function scoreCandidate(candidate, { title, sourceHost, publishedAt }) {
   const match = storyMatchScore(title, candidate.title);
   if (match < 0.28) return 0;
+  if (isDigest(candidate.title)) return 0;
 
   // Never return the gated original as its own sibling.
   try {
@@ -236,6 +266,17 @@ export const siblingsResolver = {
       const extracted = extractFromHtml(html, candidate.link);
       const access = classifyAccess({ extracted, html, url: candidate.link });
       if (!access.usable) continue;
+
+      /**
+       * Confirm the fetched page is actually about this story.
+       *
+       * A headline can match while the body is about something else: a digest,
+       * a tag page, a story that got replaced at the same URL. Requiring the
+       * distinctive terms from the original headline to appear in the body is
+       * the cheap check that catches all three, and it is what stops a figure
+       * from an unrelated item being attributed to this one.
+       */
+      if (!coversStory(title, extracted.text)) continue;
 
       return {
         lane: 'siblings',

@@ -21,7 +21,7 @@ import { normalize as normalizeSummary } from '../src/summarize.js';
 import { parseJar } from '../src/cookies.js';
 import { urlFrom, resolutionId } from '../src/index.js';
 import { tweetIdFrom, isTweetUrl, outboundLinks } from '../src/resolvers/tweet.js';
-import { topicContext } from '../src/resolvers/siblings.js';
+import { topicContext, isDigest, coversStory } from '../src/resolvers/siblings.js';
 
 describe('ssrf guard', () => {
   test('blocks the address ranges that make a fetcher an open proxy', () => {
@@ -517,6 +517,42 @@ describe('input handling', () => {
       }
     });
     assert.deepEqual(links, ['https://wsj.com/article', 'https://reuters.com/x']);
+  });
+
+  // Regression: a "what happened in crypto today" roundup won the sibling lane
+  // and the summary attributed an ETF-inflow figure from an unrelated item in
+  // that digest to the story being resolved.
+  test('rejects roundups and digests as siblings', () => {
+    for (const title of [
+      'Here’s what happened in crypto today',
+      'Crypto Today: Bitcoin steadies',
+      'Daily roundup: markets in brief',
+      'Morning Briefing: what to watch',
+      'Week in review',
+      '5 things to know before the open',
+      'Bitcoin liveblog',
+      'Market wrap for Thursday'
+    ]) {
+      assert.equal(isDigest(title), true, `"${title}" should be treated as a digest`);
+    }
+    assert.equal(isDigest('Wintermute registers as SEC broker-dealer'), false);
+    assert.equal(isDigest('Fed cuts rates by 50bps'), false);
+  });
+
+  test('verifies a fetched sibling actually covers the story', () => {
+    const title = 'Wintermute registers as SEC broker-dealer to trade stocks and crypto ETFs';
+
+    assert.equal(
+      coversStory(title, 'Wintermute has registered with the SEC as a broker-dealer, allowing it to trade stocks and ETFs.'),
+      true
+    );
+    // A digest that merely mentions the topic but is mostly other stories.
+    assert.equal(
+      coversStory(title, 'Bitcoin ETFs saw $620 million in inflows today. Ether rallied. Solana volumes rose.'),
+      false
+    );
+    // Too little in the headline to verify against: do not reject.
+    assert.equal(coversStory('Fed cuts', 'anything at all here'), true);
   });
 
   test('assigns topic context from the outlet or the path', () => {

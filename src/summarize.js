@@ -36,7 +36,7 @@ Return this exact JSON shape:
   "status_note": "under 20 words on who is asserting this and how firmly",
   "priced_in": "likely|partially|unlikely|unclear",
   "horizon": "minutes|hours|days|weeks|structural",
-  "numbers": ["the 2-5 figures that matter, each with its unit and what it measures"],
+  "numbers": ["2-5 figures, each a COMPLETE PHRASE naming what the figure measures. Write '1.1 billion airline records purchased', never '1 billion'. Write '$4.2B in ETF inflows over 5 days', never '4.2B'. A bare number with no referent is useless and you must omit it entirely rather than emit it."],
   "counter": "The strongest reason this is less important than it looks. Always fill this in.",
   "coverage": "one line on the quality of the source text you were given"
 }`;
@@ -130,8 +130,17 @@ function normalize(raw, candidate) {
     status_note: asString(raw?.status_note, 200),
     priced_in: oneOf(raw?.priced_in, ['likely', 'partially', 'unlikely', 'unclear'], 'unclear'),
     horizon: oneOf(raw?.horizon, ['minutes', 'hours', 'days', 'weeks', 'structural'], 'hours'),
+    /**
+     * Drop bare figures. A model under length pressure will emit "2025" or
+     * "1 billion" with no referent, which reads as data but carries none.
+     * A usable figure names what it measures, so it contains a word.
+     */
     numbers: Array.isArray(raw?.numbers)
-      ? raw.numbers.filter((entry) => typeof entry === 'string').slice(0, 6).map((entry) => entry.slice(0, 160))
+      ? raw.numbers
+          .filter((entry) => typeof entry === 'string')
+          .map((entry) => entry.trim().slice(0, 160))
+          .filter((entry) => /[a-z]{3}/i.test(entry.replace(/^[^a-z]*/i, '')) && entry.split(/\s+/).length >= 2)
+          .slice(0, 6)
       : [],
     counter: asString(raw?.counter, 400),
     coverage: asString(raw?.coverage, 240)

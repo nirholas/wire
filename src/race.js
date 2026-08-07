@@ -69,20 +69,40 @@ function createHints(initial = {}) {
     }
   };
 
+  /**
+   * Waits for a hint another lane may produce, giving up after maxMs.
+   *
+   * The timer here must NOT be unref'd. Both the sibling and primary lanes call
+   * this before issuing any request, so when they are the only lanes running
+   * they are the only pending work in the process. An unref'd timer lets the
+   * event loop drain while these promises are still pending, and Node exits
+   * cleanly with status 0 in the middle of a resolution, producing no output
+   * and no error. The timer is cleared on the resolve path so it never holds
+   * the process open longer than the wait itself.
+   */
   const wait = (key, maxMs) =>
     new Promise((resolve) => {
       if (values[key]) return resolve(values[key]);
+
+      let timer = null;
+      const settle = (value) => {
+        if (timer) clearTimeout(timer);
+        timer = null;
+        resolve(value);
+      };
+
       const list = waiters.get(key) || [];
-      list.push(resolve);
+      list.push(settle);
       waiters.set(key, list);
-      setTimeout(() => {
+
+      timer = setTimeout(() => {
         const current = waiters.get(key);
         if (current) {
-          const index = current.indexOf(resolve);
+          const index = current.indexOf(settle);
           if (index >= 0) current.splice(index, 1);
         }
         resolve(values[key] || '');
-      }, maxMs).unref?.();
+      }, maxMs);
     });
 
   return { values, set, wait };
@@ -182,32 +202,43 @@ export async function race(url, options = {}) {
   /** Resolves when every lane has finished, however long that takes. */
   const allSettled = Promise.allSettled(running);
 
-  // Wait for the budget, but return early once we hold an answer good enough
-  // that no remaining lane could plausibly improve on it.
-  await Promise.race([
-    allSettled,
-    new Promise((resolve) => setTimeout(resolve, budgetMs).unref?.()),
-    new Promise((resolve) => {
-      const check = setInterval(() => {
+  /**
+   * Wait for the budget, but return early once we hold an answer good enough
+   * that no remaining lane could plausibly improve on it.
+   *
+   * These timers stay ref'd for the same reason the hint timer does: they are
+   * what the resolution is waiting on, and an unref'd timer here lets the
+   * process exit mid-race. They are all cleared in the finally block so nothing
+   * outlives the wait.
+   */
+  const timers = [];
+  try {
+    await Promise.race([
+      allSettled,
+      new Promise((resolve) => {
+        timers.push(setTimeout(resolve, budgetMs));
+      }),
+      new Promise((resolve) => {
         /**
          * Only bail early on a near-certain answer. A merely good candidate
          * that happens to arrive first (a reader view at 350ms) would otherwise
          * end the race before the outlet's own copy lands at 1.1s and wins.
-         * The bar is set above what any single mid-confidence lane can reach
-         * alone, so early exit means "a trusted lane returned a full article".
+         * The bar sits above what any single mid-confidence lane reaches alone,
+         * so an early exit means a trusted lane returned a full article.
          */
-        if (bestScore >= EARLY_EXIT_SCORE) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 40);
-      check.unref?.();
-      setTimeout(() => {
-        clearInterval(check);
-        resolve();
-      }, budgetMs).unref?.();
-    })
-  ]);
+        const check = setInterval(() => {
+          if (bestScore >= EARLY_EXIT_SCORE) resolve();
+        }, 40);
+        timers.push(check);
+        timers.push(setTimeout(resolve, budgetMs));
+      })
+    ]);
+  } finally {
+    for (const timer of timers) {
+      clearTimeout(timer);
+      clearInterval(timer);
+    }
+  }
 
   /**
    * Handed back so the caller can keep listening. Late lanes still call
