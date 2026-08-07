@@ -539,6 +539,25 @@ describe('input handling', () => {
     assert.equal(isDigest('Fed cuts rates by 50bps'), false);
   });
 
+  // Regression: a DL News article about the Clarity Act *nearing* a Senate vote
+  // scored 0.30 against a story about that vote being *delayed*, cleared the
+  // old single 0.28 bar, and got summarized as the story — attributing its ETF
+  // and price figures to an event it never covered.
+  test('separates the evidence bar from the read-it-in-full bar', () => {
+    const source = 'Senate delays Clarity Act vote until after August recess, Thune says';
+    const sameEntitiesDifferentEvent =
+      'Bitcoin tops $80k price as Clarity Act nears Senate floor with new Fed chair imminent';
+    const sameEvent = 'Senate punts Clarity Act vote to September after recess';
+
+    const loose = storyMatchScore(source, sameEntitiesDifferentEvent);
+    const tight = storyMatchScore(source, sameEvent);
+
+    // Loose enough to list as coverage, not enough to read as the story.
+    assert.ok(loose >= 0.28, 'still counts as coverage evidence');
+    assert.ok(loose < 0.5, 'must not clear the read-in-full bar');
+    assert.ok(tight >= 0.5, 'the actual same-event story must clear it');
+  });
+
   test('verifies a fetched sibling actually covers the story', () => {
     const title = 'Wintermute registers as SEC broker-dealer to trade stocks and crypto ETFs';
 

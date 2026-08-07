@@ -153,18 +153,22 @@ export async function resolve(input, options = {}) {
    * ---------------------------------------------------------------------- */
   const isSameAsPost = target === url && Boolean(tweet);
   let raceResult = null;
+  /** Candidates already reported, so the late-upgrade path never repeats one. */
+  const reportedCandidates = new Set();
 
   if (!isSameAsPost) {
     raceResult = await race(target, {
       budgetMs,
-      onUpdate: (update) =>
+      onUpdate: (update) => {
+        reportedCandidates.add(update.best);
         emit({
           stage: 'text',
           lane: update.lane,
           score: Number(update.score.toFixed(3)),
           candidate: publicCandidate(update.best),
           candidateCount: update.candidateCount
-        }),
+        });
+      },
       hints,
       only,
       exclude,
@@ -245,13 +249,21 @@ export async function resolve(input, options = {}) {
     const delta = scoreCandidate(improved) - scoreCandidate(best);
     if (delta < RESUMMARIZE_DELTA) return result;
 
-    emit({
-      stage: 'text',
-      lane: improved.lane,
-      late: true,
-      score: Number(scoreCandidate(improved).toFixed(3)),
-      candidate: publicCandidate(improved)
-    });
+    /**
+     * The race's own onUpdate keeps firing after race() returns, so a lane that
+     * lands past the budget has usually already been reported. Re-emitting it
+     * here showed the same candidate twice at the same elapsed time.
+     */
+    if (!reportedCandidates.has(improved)) {
+      reportedCandidates.add(improved);
+      emit({
+        stage: 'text',
+        lane: improved.lane,
+        late: true,
+        score: Number(scoreCandidate(improved).toFixed(3)),
+        candidate: publicCandidate(improved)
+      });
+    }
 
     let lateSummary = null;
     if (withSummary) {

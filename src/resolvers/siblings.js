@@ -153,9 +153,22 @@ export function coversStory(title, text) {
   return present.length / terms.length >= 0.5;
 }
 
+/**
+ * Two bars, because the two uses have very different costs of being wrong.
+ *
+ * Listing an outlet under "also running it" on a loose match is harmless.
+ * Reading that outlet in full and summarizing it AS the story is not: a 0.30
+ * match is "mentions the same entities", not "is the same event". A story about
+ * the Clarity Act *nearing* a Senate vote scores 0.30 against one about the
+ * vote being *delayed*, and summarizing it attributes that article's figures to
+ * an event it never covered.
+ */
+const MATCH_MIN_EVIDENCE = 0.28;
+const MATCH_MIN_READABLE = 0.5;
+
 function scoreCandidate(candidate, { title, sourceHost, publishedAt }) {
   const match = storyMatchScore(title, candidate.title);
-  if (match < 0.28) return 0;
+  if (match < MATCH_MIN_EVIDENCE) return 0;
   if (isDigest(candidate.title)) return 0;
 
   // Never return the gated original as its own sibling.
@@ -248,8 +261,12 @@ export const siblingsResolver = {
       });
     }
 
-    // Read the best candidate that has a real URL and is not itself gated.
-    const readable = scored.filter(({ candidate }) => candidate.link).slice(0, 3);
+    // Read the best candidate that has a real URL, clears the stricter
+    // same-event bar, and is not itself gated. Anything weaker stays evidence.
+    const readable = scored
+      .filter(({ candidate }) => candidate.link)
+      .filter(({ candidate }) => storyMatchScore(title, candidate.title) >= MATCH_MIN_READABLE)
+      .slice(0, 3);
     for (const { candidate, score } of readable) {
       let html;
       try {
