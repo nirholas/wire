@@ -79,6 +79,12 @@ export const config = {
 
   llm: {
     prefer: str('WIRE_LLM_PREFER', 'speed'),
+    /**
+     * Which Claude model the quality lane uses. Opus 5 gives the best read and
+     * costs about $0.018 per link at this prompt size; sonnet-5 and haiku-4-5
+     * are the cheaper rungs. See the cost table in llm.js.
+     */
+    qualityModel: str('WIRE_LLM_QUALITY_MODEL', 'claude-opus-5'),
     anthropicKey: str('ANTHROPIC_API_KEY'),
     groqKey: str('GROQ_API_KEY'),
     cerebrasKey: str('CEREBRAS_API_KEY'),

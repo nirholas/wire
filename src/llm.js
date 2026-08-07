@@ -76,10 +76,25 @@ function openAiCompatible({ name, endpoint, model, key, extraHeaders = {}, jsonM
   };
 }
 
+/**
+ * The quality lane's model, shared by the direct Anthropic provider and the
+ * OpenRouter mirror of it.
+ *
+ * Measured cost of one read at this prompt size (~1,516 in / ~400 out):
+ *   claude-opus-5     $0.0176   the default; best read
+ *   claude-sonnet-5   $0.0105   ~60% of the cost, still far above any open model
+ *   claude-haiku-4-5  $0.0035   cheapest Claude tier, fastest
+ *
+ * At 100 links a day that is $53 / $32 / $11 a month respectively.
+ */
+function qualityModel() {
+  return config.llm.qualityModel;
+}
+
 function anthropic(key) {
   return {
     name: 'anthropic',
-    model: 'claude-haiku-4-5-20251001',
+    model: qualityModel(),
     async complete({ system, user, maxTokens, temperature, signal, timeoutMs }) {
       const data = await postJson('https://api.anthropic.com/v1/messages', {
         signal,
@@ -199,7 +214,8 @@ export function providerChain() {
       openAiCompatible({
         name: 'openrouter',
         endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-        model: 'anthropic/claude-haiku-4.5',
+        // OpenRouter namespaces Anthropic models and uses dots, not dashes.
+        model: `anthropic/${qualityModel().replace(/-(\d)-(\d)$/, '-$1.$2')}`,
         key,
         extraHeaders: {
           'http-referer': 'https://github.com/nirholas/wire',

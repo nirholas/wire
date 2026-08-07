@@ -219,6 +219,25 @@ provenance line is what keeps it honest when the source is thin.
 
 `counter` is mandatory. A read with no counter-argument is a pitch.
 
+### What the read costs
+
+The read is the product. Everything else just fetches text, and hosting is a
+rounding error next to it, so this is where a budget belongs.
+
+One read is about 1,516 input and 400 output tokens (measured, not estimated):
+
+| Model | Per read | At 100 links/day |
+|---|---|---|
+| Groq `llama-3.3-70b` | free tier | $0 |
+| `claude-haiku-4-5` | $0.0035 | ~$11/mo |
+| `claude-sonnet-5` | $0.0105 | ~$32/mo |
+| `claude-opus-5` | $0.0176 | ~$53/mo |
+
+Set `WIRE_LLM_PREFER=quality` to put Claude first and `WIRE_LLM_QUALITY_MODEL`
+to choose the tier. Groq stays in the chain underneath as failover, so a
+rate-limited or unfunded Claude account degrades to a working read rather than
+to nothing.
+
 ## Configuration
 
 | Variable | Default | What it does |
