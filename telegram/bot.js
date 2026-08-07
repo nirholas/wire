@@ -126,14 +126,24 @@ function allowed(userId) {
   return config.telegram.allowedUsers.includes(String(userId));
 }
 
-async function handleCommand(chatId, command) {
+async function handleCommand(chatId, command, userId) {
   if (command === '/start' || command === '/help') {
     return sendMessage(chatId, renderHelp());
+  }
+
+  if (command === '/whoami') {
+    return sendMessage(
+      chatId,
+      `Your Telegram user id is <code>${userId}</code>\n\n` +
+        'Add it to <code>TELEGRAM_ALLOWED_USERS</code> in .env (comma separated) and restart ' +
+        'to lock this bot to you and the people you choose.'
+    );
   }
 
   if (command === '/health') {
     const chain = providerChain();
     const domains = jarDomains();
+    const locked = config.telegram.allowedUsers.length;
     const lines = [
       '<b>wire status</b>',
       '',
@@ -141,7 +151,11 @@ async function handleCommand(chatId, command) {
       `models: <code>${chain.length ? chain.map((p) => `${p.name}:${p.model}`).join('\n        ') : 'none'}</code>`,
       `read: ${llmConfigured() ? 'enabled' : '<b>disabled</b> (no LLM key; text only)'}`,
       `subscriptions: <code>${domains.length ? domains.join(', ') : 'none loaded'}</code>`,
-      `budget: <code>${config.budgetMs}ms race, ${config.llmBudgetMs}ms read</code>`
+      `budget: <code>${config.budgetMs}ms race, ${config.llmBudgetMs}ms read</code>`,
+      '',
+      locked
+        ? `access: <code>${locked} allowed user${locked === 1 ? '' : 's'}</code>`
+        : `access: <b>OPEN TO EVERYONE</b>\nYour id is <code>${userId}</code>. Put it in TELEGRAM_ALLOWED_USERS to lock this down.`
     ];
     return sendMessage(chatId, lines.join('\n'));
   }
@@ -233,9 +247,12 @@ export async function handleTelegramUpdate(update) {
   if (!chatId) return;
 
   if (userId && !allowed(userId)) {
-    await sendMessage(chatId, 'Not authorized. Ask the owner to add your id to TELEGRAM_ALLOWED_USERS.').catch(
-      () => {}
-    );
+    // Tell them their id: the owner needs exactly this to allowlist them, and
+    // there is no other convenient way for a Telegram user to look it up.
+    await sendMessage(
+      chatId,
+      `Not authorized. Your user id is <code>${userId}</code> - ask the owner to add it to TELEGRAM_ALLOWED_USERS.`
+    ).catch(() => {});
     return;
   }
 
@@ -245,7 +262,7 @@ export async function handleTelegramUpdate(update) {
   const trimmed = text.trim();
   if (trimmed.startsWith('/')) {
     const command = trimmed.split(/[\s@]/)[0].toLowerCase();
-    await handleCommand(chatId, command).catch(() => {});
+    await handleCommand(chatId, command, userId).catch(() => {});
     return;
   }
 

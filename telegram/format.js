@@ -203,6 +203,7 @@ export function renderHelp() {
     '',
     '<b>Commands</b>',
     '/health - which lanes and models are live',
+    '/whoami - your user id, for the allowlist',
     '/help - this'
   ].join('\n');
 }
