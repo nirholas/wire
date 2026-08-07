@@ -1,0 +1,32 @@
+[Unit]
+Description=wire - resolve a news link to the trade
+Documentation=https://github.com/nirholas/wire
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+# Never more than one instance: two processes polling the same bot token split
+# updates between them at random.
+ExecStartPre=-/usr/bin/docker rm -f wire
+ExecStart=/usr/bin/docker run --rm --name wire \
+  --env-file /etc/wire.env \
+  -p 127.0.0.1:8787:8787 \
+  -v /opt/wire/data:/data \
+  wire
+
+ExecStop=/usr/bin/docker stop -t 15 wire
+
+# The container drains on SIGTERM; give it room to finish in-flight resolutions
+# and post their final message edit before systemd escalates to SIGKILL.
+TimeoutStopSec=25
+
+Restart=always
+RestartSec=5
+# Do not give up after repeated restarts: a flapping upstream should not leave
+# the bot permanently dead.
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target

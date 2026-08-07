@@ -8,7 +8,7 @@ import { getResolution, recentResolutions, sweepCache } from '../src/cache.js';
 import { llmConfigured, providerChain } from '../src/llm.js';
 import { jarDomains } from '../src/cookies.js';
 import { RESOLVERS } from '../src/resolvers/index.js';
-import { handleTelegramUpdate, startPolling, registerWebhook } from '../telegram/bot.js';
+import { handleTelegramUpdate, startPolling, stopPolling, registerWebhook } from '../telegram/bot.js';
 
 const WEB_DIR = join(config.root, 'web');
 
@@ -257,6 +257,50 @@ server.listen(config.server.port, () => {
   } else {
     console.log('  telegram : disabled (no TELEGRAM_BOT_TOKEN)');
   }
+});
+
+/**
+ * Graceful shutdown.
+ *
+ * Every host sends SIGTERM before it replaces or stops a machine, and gives you
+ * a short grace period. Without this the process is hard-killed mid-resolution:
+ * a Telegram message is left frozen on "resolving…" forever, and the long-poll
+ * connection is dropped in a way that makes Telegram redeliver the update to the
+ * next instance, which then answers a question the user already saw answered.
+ */
+let shuttingDown = false;
+
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`\nwire: ${signal} received, draining`);
+
+  stopPolling();
+  server.close();
+
+  // Give in-flight resolutions a moment to finish and post their final edit.
+  const deadline = setTimeout(() => {
+    console.log('wire: drain timed out, exiting');
+    process.exit(0);
+  }, 8000);
+  deadline.unref?.();
+
+  server.closeIdleConnections?.();
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  clearTimeout(deadline);
+  console.log('wire: stopped');
+  process.exit(0);
+}
+
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.on(signal, () => {
+    shutdown(signal).catch(() => process.exit(1));
+  });
+}
+
+// A crash in a background lane must not take the whole bot down with it.
+process.on('unhandledRejection', (reason) => {
+  console.error('wire: unhandled rejection', reason instanceof Error ? reason.message : reason);
 });
 
 export { server };

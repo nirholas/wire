@@ -1,0 +1,14 @@
+node_modules
+.git
+.github
+data
+test
+*.md
+!README.md
+.env
+.env.local
+.env.example
+fly.toml
+Dockerfile
+.dockerignore
+*.log

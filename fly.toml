@@ -1,0 +1,52 @@
+# wire on Fly.io
+#
+#   fly launch --no-deploy --copy-config
+#   fly volumes create wire_data --size 1 --region iad
+#   fly secrets set TELEGRAM_BOT_TOKEN=... GROQ_API_KEY=... OPENROUTER_API_KEY=...
+#   fly deploy
+#
+# Secrets are set with `fly secrets`, never in this file. This file is committed.
+
+app = "wire"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  NODE_ENV = "production"
+  WIRE_DATA_DIR = "/data"
+  # Long polling needs no public URL, no domain, and no TLS setup. Switch to
+  # "webhook" only if you also set TELEGRAM_WEBHOOK_BASE to this app's URL.
+  TELEGRAM_MODE = "poll"
+  WIRE_LLM_PREFER = "speed"
+
+# The sqlite cache and the cookie jar live here so they survive a deploy.
+[[mounts]]
+  source = "wire_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  # A Telegram bot that sleeps stops polling, so it must stay up. This is the
+  # single most important setting in this file: with auto_stop enabled the bot
+  # silently goes deaf between web requests.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+    method = "GET"
+    path = "/healthz"
+
+# 512MB is comfortable. The heaviest thing wire holds is one 4MB HTML response
+# at a time, and the LRU is capped at 512 entries.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  cpus = 1

@@ -53,6 +53,9 @@ const list = (key) =>
 
 const contact = str('WIRE_CONTACT_EMAIL');
 
+/** Where writable state lives. A mounted volume in production, the repo locally. */
+const dataDir = () => resolve(ROOT, str('WIRE_DATA_DIR', resolve(ROOT, 'data')));
+
 export const config = {
   root: ROOT,
 
@@ -97,8 +100,20 @@ export const config = {
     apiToken: str('WIRE_API_TOKEN')
   },
 
-  cookieJarPath: str('WIRE_COOKIE_JAR', resolve(ROOT, 'data/cookies/jar.txt')),
-  dbPath: resolve(ROOT, 'data/wire.db')
+  /**
+   * Writable state lives here. On a host with a mounted volume this points at
+   * the mount (/data on Fly), so the cache and the resolution history survive a
+   * deploy. Left unset it stays inside the repo, which is what you want locally.
+   */
+  dataDir: dataDir(),
+  /**
+   * Always absolute. A relative path here resolves against the process CWD,
+   * which in a container is /app rather than the mounted volume, so a jar
+   * configured as "./data/cookies/jar.txt" would silently sit outside
+   * persistent storage and vanish on the next deploy.
+   */
+  cookieJarPath: resolve(dataDir(), str('WIRE_COOKIE_JAR') || 'cookies/jar.txt'),
+  dbPath: resolve(dataDir(), 'wire.db')
 };
 
 export default config;

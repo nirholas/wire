@@ -264,10 +264,34 @@ parser silently returns an empty link for every RSS item. This cost real debuggi
 Telegram. Without the SSRF guard the server is an open proxy into whatever network it
 runs on, including cloud metadata endpoints. Redirects are re-validated on every hop.
 
+## Running it 24/7
+
+wire is one container. `Dockerfile` and `fly.toml` are in the repo and both are
+verified: the image builds, serves, resolves a live article, drains on SIGTERM,
+and keeps its sqlite cache on a mounted volume across restarts.
+
+```bash
+fly launch --no-deploy --copy-config
+fly volumes create wire_data --size 1 --region iad
+fly secrets set TELEGRAM_BOT_TOKEN=... GROQ_API_KEY=...
+fly deploy
+```
+
+About $3-4/month. Long polling needs no domain and no TLS.
+
+**The machine must not sleep.** A host that suspends between HTTP requests stops
+the bot receiving anything, with no error to see. `fly.toml` disables
+`auto_stop_machines` for exactly this reason; leave it that way. And run only one
+instance: two processes polling the same token split updates at random.
+
+Hetzner plus the systemd unit in `deploy/wire.service`, or Cloud Run in webhook
+mode, both work too. Full instructions and the hosts to avoid:
+[docs/deploy.md](docs/deploy.md).
+
 ## Tests
 
 ```bash
-npm test    # 46 tests, no network required
+npm test    # 48 tests, no network required
 ```
 
 ## Limits
