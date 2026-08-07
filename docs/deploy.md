@@ -96,16 +96,74 @@ reason to use systemd rather than `docker run -d`.
 
 ---
 
-## Google Cloud Run
+## Google Cloud
 
-Workable, and free if you are spending existing credits, but it is the weakest
-fit of the three and needs the most care:
+Three ways, and the cheapest is also the best fit. Rates below are from the
+Cloud Billing Catalog API for `us-central1`, not from a pricing page summary.
+
+### Compute Engine e2-micro on Always Free (recommended on GCP, $0)
+
+GCP's Always Free tier includes one `e2-micro` per month in `us-west1`,
+`us-central1`, or `us-east1`, plus 30GB of **Standard** persistent disk. That is
+an always-on VM, so long polling works, the disk is real so the sqlite cache
+persists, and it costs nothing indefinitely.
+
+```bash
+gcloud compute instances create wire \
+  --zone=us-central1-a \
+  --machine-type=e2-micro \
+  --boot-disk-type=pd-standard \
+  --boot-disk-size=30GB \
+  --image-family=debian-12 --image-project=debian-cloud
+```
+
+Then follow the VPS instructions above: Docker, `/etc/wire.env`, and the systemd
+unit in `deploy/wire.service`.
+
+Watch three things or it stops being free: the machine type must stay `e2-micro`,
+the boot disk must be `pd-standard` (Balanced and SSD are billed), and the region
+must be one of the three listed. Only one such instance is free per billing
+account, so if three.ws already uses it, this is not free for you.
+
+e2-micro is shared-core: 0.25 vCPU baseline bursting to 2, and 1GB RAM. That is
+fine here, because wire spends nearly all of its wall clock waiting on outbound
+HTTP rather than computing.
+
+### Cloud Run, webhook mode, scale to zero ($0 at low volume)
+
+Cloud Run's free tier is 180,000 vCPU-seconds and 360,000 GiB-seconds per month.
+At 100 resolutions a day averaging 5 seconds, that is about 15,000 vCPU-seconds a
+month, roughly 8% of the free allowance. So this genuinely costs nothing.
+
+The catch is latency: a scaled-to-zero instance cold-starts in one to two seconds,
+which is most of the budget the entire product is designed around. The first
+message after a quiet period feels broken. Acceptable for the web UI, poor for
+the bot.
+
+### Cloud Run, webhook mode, `--min-instances=1` (about $9/month)
+
+No cold starts. Idle time on a min instance bills at the reduced rate:
+
+| SKU (us-central1) | Rate | Monthly (1 vCPU, 512MiB, 2,592,000s) |
+|---|---|---|
+| Services Min Instance CPU | $0.0000025 / vCPU-s | $6.48 |
+| Services Min Instance Memory | $0.0000025 / GiB-s | $3.24 |
+| Active request time | $0.000024 / vCPU-s | under $0.50 |
+
+About **$9-10/month** before the free tier, a little under after.
+
+### The expensive mistake
+
+Do **not** reach for instance-based billing ("CPU always allocated") thinking it
+will let the bot long-poll. It bills the full instance lifetime at
+$0.000018/vCPU-s plus $0.00000193/GiB-s, which is **about $49/month** for the same
+machine, five times the min-instances approach and twelve times a Hetzner box.
+It also still does not guarantee the process stays alive the way a VM does.
+
+### Whichever Cloud Run path you pick
 
 - **Use webhook mode.** Cloud Run has no always-on process guarantee, so long
-  polling will not survive.
-- **Pin `--min-instances=1`.** Otherwise a cold start adds one to two seconds to
-  a budget the whole product is built around. This is what makes it cost roughly
-  $12-15/month rather than nothing.
+  polling will not survive. Compute Engine is the option that supports it.
 - **The filesystem is ephemeral.** The sqlite cache resets on every revision and
   every new instance. Nothing breaks, but `/api/recent` and permalinks only cover
   the life of the current instance. Mount a GCS volume if that matters.
