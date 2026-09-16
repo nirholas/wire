@@ -8,6 +8,10 @@ Bloomberg and you cannot read it, and by the time you could, the candle is gone.
 wire fires every route at that story simultaneously, shows you the first useful answer
 in a few hundred milliseconds, and sharpens it in place while you are still reading.
 
+**Try it in Telegram:** [@paywallbypassbot](https://t.me/paywallbypassbot) is the live
+deployment of this repo. Send it a link. It is a personal instance, so it may be
+locked down or offline at any given moment; [run your own](#telegram) in a few minutes.
+
 ```
   351ms  tweet        @zerohedge: FED SIGNALS 50BPS CUT AT SEPTEMBER MEETING
   480ms  gated        The Wall Street Journal
@@ -58,7 +62,7 @@ a publisher tightens their edge.
 ## Install
 
 ```bash
-git clone <your-remote> wire && cd wire
+git clone https://github.com/nirholas/wire.git && cd wire
 npm install
 cp .env.example .env
 ```
@@ -107,6 +111,8 @@ npx wire <url> --only=siblings,primary
 
 This is the surface that matters. You are already in Telegram when news breaks, and an
 app switch costs more than the entire latency budget.
+
+The reference bot is [@paywallbypassbot](https://t.me/paywallbypassbot). To run your own:
 
 1. Message [@BotFather](https://t.me/botfather), `/newbot`, copy the token.
 2. Put it in `.env` as `TELEGRAM_BOT_TOKEN`.
@@ -310,7 +316,7 @@ mode, both work too. Full instructions and the hosts to avoid:
 ## Tests
 
 ```bash
-npm test    # 48 tests, no network required
+npm test    # 49 tests, no network required
 ```
 
 ## Limits

@@ -24,5 +24,13 @@
   "dependencies": {
     "fast-xml-parser": "^5.10.1",
     "node-html-parser": "^7.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nirholas/wire.git"
+  },
+  "homepage": "https://github.com/nirholas/wire#readme",
+  "bugs": {
+    "url": "https://github.com/nirholas/wire/issues"
   }
 }
