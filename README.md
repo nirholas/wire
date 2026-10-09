@@ -343,3 +343,7 @@ pay for. It contains no circumvention rules for any publisher. Google News resul
 Google's own terms restricting them to personal, non-commercial use, and this tool is
 built for personal use. If you are going to run it for a group, run it for a group of
 people who are reading, not republishing.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nirholas/wire&type=Date)](https://www.star-history.com/#nirholas/wire&Date)
