@@ -1,0 +1,28 @@
+# wire
+
+> Resolve a news link to the trade, fast. Races eight lanes under a latency budget and streams a progressively sharper answer.
+
+wire is an open-source repository by nirholas, part of the three.ws ecosystem.
+
+## Docs
+
+- [README](https://github.com/nirholas/wire/blob/HEAD/README.md): install, usage and reference
+- [The idea](https://github.com/nirholas/wire/blob/HEAD/README.md#the-idea)
+- [Install](https://github.com/nirholas/wire/blob/HEAD/README.md#install)
+- [Use it](https://github.com/nirholas/wire/blob/HEAD/README.md#use-it)
+- [Reading outlets you pay for](https://github.com/nirholas/wire/blob/HEAD/README.md#reading-outlets-you-pay-for)
+- [The read](https://github.com/nirholas/wire/blob/HEAD/README.md#the-read)
+- [Configuration](https://github.com/nirholas/wire/blob/HEAD/README.md#configuration)
+- [How it fits together](https://github.com/nirholas/wire/blob/HEAD/README.md#how-it-fits-together)
+- [Running it 24/7](https://github.com/nirholas/wire/blob/HEAD/README.md#running-it-247)
+- [AGENTS.md](https://github.com/nirholas/wire/blob/HEAD/AGENTS.md): guidance for coding agents
+- [Full text for LLMs](https://github.com/nirholas/wire/blob/HEAD/llms-full.txt): the README inlined
+
+## Project
+
+- [Source](https://github.com/nirholas/wire)
+- [Issues](https://github.com/nirholas/wire/issues)
+- [Discussions](https://github.com/nirholas/wire/discussions)
+- [Homepage](https://t.me/paywallbypassbot)
+- [three.ws](https://three.ws): the platform this is part of
+- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme)

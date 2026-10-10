@@ -1,5 +1,10 @@
 # wire
 
+<!-- three.ws:badges -->
+[![GitHub stars](https://img.shields.io/github/stars/nirholas/wire?style=flat&logo=github)](https://github.com/nirholas/wire/stargazers) [![Last commit](https://img.shields.io/github/last-commit/nirholas/wire?style=flat)](https://github.com/nirholas/wire/commits) [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](https://github.com/nirholas/wire/pulls) [![AI agent friendly](https://img.shields.io/badge/AI%20agents-AGENTS.md%20%2B%20llms.txt-6d5dfc?style=flat)](https://github.com/nirholas/wire/blob/HEAD/AGENTS.md)
+<!-- /three.ws:badges -->
+
+
 Resolve a news link to the trade, in about a second.
 
 You are watching an X tracker on padre.gg or gmgn. Something breaks. The link is to
@@ -347,3 +352,26 @@ people who are reading, not republishing.
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=nirholas/wire&type=Date)](https://www.star-history.com/#nirholas/wire&Date)
+
+<!-- three.ws:growth -->
+## Support the project
+
+If wire saves you time, **[star it on GitHub](https://github.com/nirholas/wire)**. Stars are how other developers and AI agents find the repositories worth trusting, and they cost you one click.
+
+Know someone who would use it? [Post on X](https://twitter.com/intent/tweet?text=wire%3A%20Resolve%20a%20news%20link%20to%20the%20trade%2C%20fast&url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fwire) · [Share on Bluesky](https://bsky.app/intent/compose?text=wire%3A%20Resolve%20a%20news%20link%20to%20the%20trade%2C%20fast%20https%3A%2F%2Fgithub.com%2Fnirholas%2Fwire) · [Share on LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fwire) · [Submit to Hacker News](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fnirholas%2Fwire&t=wire%3A%20Resolve%20a%20news%20link%20to%20the%20trade%2C%20fast) · [Share on Reddit](https://www.reddit.com/submit?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fwire&title=wire%3A%20Resolve%20a%20news%20link%20to%20the%20trade%2C%20fast)
+
+## Built for AI agents too
+
+Coding agents and LLM tooling can read this repo directly: [AGENTS.md](./AGENTS.md), [llms.txt](./llms.txt), [llms-full.txt](./llms-full.txt). Point an agent at `https://github.com/nirholas/wire` and it has the context it needs.
+
+## More from the same author
+
+- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme): the full catalog, grouped by topic
+- [three.ws](https://three.ws): the platform for 3D AI agents with Solana wallets, a skill marketplace and x402 payments
+- Questions or ideas: [open an issue](https://github.com/nirholas/wire/issues) or [start a discussion](https://github.com/nirholas/wire/discussions)
+
+## Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=nirholas/wire)](https://github.com/nirholas/wire/graphs/contributors)
+
+<!-- /three.ws:growth -->
