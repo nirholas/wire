@@ -1,0 +1,22 @@
+{
+  "name": "wire",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "Resolve a news link to its trading read by racing free lanes under a latency budget, from a CLI, HTTP API or library.",
+  "plugins": [
+    {
+      "name": "wire-news-resolver",
+      "source": "./plugins/wire-news-resolver",
+      "description": "Resolve a news link to its trading read by racing free lanes under a latency budget, from a CLI, HTTP API or library.",
+      "category": "data",
+      "tags": [
+        "news",
+        "trading",
+        "crypto",
+        "resolver",
+        "latency"
+      ]
+    }
+  ]
+}
