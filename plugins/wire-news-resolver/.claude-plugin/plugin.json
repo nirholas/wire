@@ -1,0 +1,18 @@
+{
+  "name": "wire-news-resolver",
+  "version": "0.1.0",
+  "description": "Resolve a news link to its trading read by racing free lanes under a latency budget, from a CLI, HTTP API or library.",
+  "author": {
+    "name": "nirholas"
+  },
+  "repository": "https://github.com/nirholas/wire",
+  "homepage": "https://github.com/nirholas/wire",
+  "license": "Apache-2.0",
+  "keywords": [
+    "news",
+    "trading",
+    "crypto",
+    "resolver",
+    "latency"
+  ]
+}
