@@ -22,7 +22,7 @@
     "doctor": "node bin/wire.js --doctor"
   },
   "dependencies": {
-    "fast-xml-parser": "^5.10.1",
+    "fast-xml-parser": "^5.12.0",
     "node-html-parser": "^7.1.0"
   },
   "repository": {
